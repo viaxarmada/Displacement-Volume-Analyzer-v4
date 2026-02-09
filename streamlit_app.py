@@ -846,6 +846,60 @@ def create_donut_chart(efficiency_percentage):
     
     return fig
 
+def create_mini_efficiency_bar(efficiency_pct):
+    """Create mini horizontal bar chart for project efficiency"""
+    # Determine color based on efficiency
+    if efficiency_pct >= 85:
+        color = '#10b981'
+        label = 'Excellent'
+    elif efficiency_pct >= 75:
+        color = '#3b82f6'
+        label = 'Good'
+    elif efficiency_pct >= 60:
+        color = '#f59e0b'
+        label = 'Fair'
+    else:
+        color = '#ef4444'
+        label = 'Poor'
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Bar(
+        x=[efficiency_pct],
+        y=[''],
+        orientation='h',
+        marker=dict(
+            color=color,
+            line=dict(color='rgba(255,255,255,0.2)', width=1)
+        ),
+        hovertemplate=f'<b>{efficiency_pct:.1f}% Filled</b><br>{label} Efficiency<extra></extra>',
+        showlegend=False,
+        hoverlabel=dict(
+            bgcolor=color,
+            font=dict(color='white', size=14, family='DM Sans')
+        )
+    ))
+    
+    fig.update_layout(
+        xaxis=dict(
+            range=[0, 100],
+            showticklabels=False,
+            showgrid=False,
+            zeroline=False
+        ),
+        yaxis=dict(
+            showticklabels=False,
+            showgrid=False
+        ),
+        height=35,
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        hovermode='closest'
+    )
+    
+    return fig
+
 def create_2d_box_illustration(length, width, height, unit='inches'):
     """Create dynamic 2D box illustration with dimension callouts"""
     if length <= 0 or width <= 0 or height <= 0:
@@ -1415,15 +1469,27 @@ with tab1:
         with col1:
             st.markdown("### Input")
             weight_unit = st.session_state.pref_weight_unit
+            
             weight = st.number_input(
                 f"Weight of Water ({weight_unit})",
                 min_value=0.0,
+                value=0.0,  # Default to 0.0 instead of None
                 step=0.1,
                 format="%.2f",
                 help=f"Enter weight in {weight_unit}",
                 key="product_weight"
             )
             st.info(f"ℹ️ Using **{weight_unit}** (set in Unit Preferences)")
+            
+            # Conversion Reference - Moved here, same width as input
+            with st.expander("📐 Conversion Reference", expanded=False):
+                st.markdown("""
+                <div style="font-size: 0.85rem;">
+                <strong>1 US Fluid Ounce =</strong><br>
+                29,574 mm³ | 29.57 cm³ | 1.804 in³<br>
+                <em style="font-size: 0.75rem; color: #64748b;">Water at 4°C (1 g/mL)</em>
+                </div>
+                """, unsafe_allow_html=True)
         
         with col2:
             st.markdown("### Results")
@@ -1464,22 +1530,23 @@ with tab1:
                 """, unsafe_allow_html=True)
                 
                 st.info(f"ℹ️ Displaying in **{result_unit}** (set in Unit Preferences)")
+            else:
+                # Show placeholder when no input
+                st.markdown("""
+                <div class="metric-card" style="opacity: 0.5;">
+                    <div style="color: #64748b; font-weight: bold; font-size: 1.2rem;">Volume Result</div>
+                    <div style="font-size: 3rem; font-weight: 700; color: #475569; margin: 16px 0;">--</div>
+                    <div style="color: #64748b;">Enter weight to calculate</div>
+                </div>
+                """, unsafe_allow_html=True)
         
-        # Conversion Reference - Compact
-        with st.expander("📐 Conversion Reference", expanded=False):
-            st.markdown("""
-            <div style="font-size: 0.85rem;">
-            <strong>1 US Fluid Ounce =</strong><br>
-            29,574 mm³ | 29.57 cm³ | 1.804 in³<br>
-            <em style="font-size: 0.75rem; color: #64748b;">Water at 4°C (1 g/mL)</em>
-            </div>
-            """, unsafe_allow_html=True)
-        
+        # Total Product Volume section
         if 'primary_volume_mm3' in st.session_state and st.session_state.primary_volume_mm3 > 0:
             st.markdown("---")
             st.markdown("### Total Product Volume")
             
-            total_col1, total_col2, total_col3 = st.columns([2, 1, 2])
+            # New layout: Single Unit | Quantity | Total Volume (all in one row)
+            total_col1, total_col2, total_col3 = st.columns([2, 1.5, 2])
             
             with total_col1:
                 result_unit = st.session_state.pref_volume_unit
@@ -1502,10 +1569,17 @@ with tab1:
                 """, unsafe_allow_html=True)
             
             with total_col2:
-                st.markdown("<div style='text-align: center; font-size: 1.5rem; margin-top: 20px; color: #64748b;'>×</div>", unsafe_allow_html=True)
+                # Quantity input with label above
+                st.markdown("""
+                <div style="color: #94a3b8; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">
+                    Quantity (max 999)
+                </div>
+                """, unsafe_allow_html=True)
+                
                 quantity = st.number_input(
-                    "Qty",
+                    "Quantity",
                     min_value=1,
+                    max_value=999,
                     step=1,
                     value=1,
                     key="product_quantity",
@@ -1520,28 +1594,38 @@ with tab1:
                 # Compact inline display
                 st.markdown(f"""
                 <div style="padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); border-radius: 8px; height: 70px; display: flex; flex-direction: column; justify-content: center;">
-                    <div style="color: #f87171; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">Total Volume</div>
+                    <div style="color: #f87171; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">Total Volume (×{quantity})</div>
                     <div style="font-size: 1.4rem; font-weight: bold; color: #f87171; font-family: 'JetBrains Mono', monospace;">
                         {total_volume:.2f} <span style="font-size: 0.9rem; opacity: 0.8;">{result_unit}</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
         
+        # Persistent Bottom Navigation - All 3 Sections
         st.markdown("---")
-        nav_col1, nav_col2, nav_spacer = st.columns([1, 1, 2])
+        st.markdown("### 🧭 Quick Navigation")
+        nav_col1, nav_col2, nav_col3 = st.columns(3)
         
         with nav_col1:
-            if st.button("📦 Secondary Packaging →", use_container_width=True, type="primary", key="to_secondary"):
+            st.button(
+                "📊 Primary Calculator",
+                use_container_width=True,
+                disabled=True,  # Current section
+                type="primary"
+            )
+        
+        with nav_col2:
+            if st.button("📦 Secondary Packaging", use_container_width=True, type="secondary", key="nav_to_secondary"):
                 st.session_state.analyzer_section = 'secondary'
                 st.rerun()
         
-        with nav_col2:
-            if st.button("📊 Volume Analysis →", use_container_width=True, type="primary", key="to_analysis_from_primary"):
-                if 'primary_volume_mm3' in st.session_state and 'box_volume_mm3' in st.session_state:
+        with nav_col3:
+            if st.button("📈 Volume Analysis", use_container_width=True, type="secondary", key="nav_to_analysis"):
+                if 'box_volume_mm3' in st.session_state:
                     st.session_state.analyzer_section = 'analysis'
                     st.rerun()
                 else:
-                    st.warning("⚠️ Please calculate box volume first")
+                    st.warning("⚠️ Calculate box volume first")
     
     # SECTION 2: SECONDARY PACKAGING
     elif st.session_state.analyzer_section == 'secondary':
@@ -1559,6 +1643,7 @@ with tab1:
             box_length = st.number_input(
                 f"Length ({dimension_unit})",
                 min_value=0.0,
+                value=0.0,  # Default to 0.0
                 step=0.1,
                 format="%.2f",
                 key="box_length"
@@ -1567,6 +1652,7 @@ with tab1:
             box_width = st.number_input(
                 f"Width ({dimension_unit})",
                 min_value=0.0,
+                value=0.0,  # Default to 0.0
                 step=0.1,
                 format="%.2f",
                 key="box_width"
@@ -1575,6 +1661,7 @@ with tab1:
             box_height = st.number_input(
                 f"Height ({dimension_unit})",
                 min_value=0.0,
+                value=0.0,  # Default to 0.0
                 step=0.1,
                 format="%.2f",
                 key="box_height"
@@ -1602,20 +1689,57 @@ with tab1:
                     st.error("⚠️ Please enter all dimensions")
         
         with col2:
-            st.markdown("#### Live Preview")
-            # Dynamic 2D box illustration
-            box_svg = create_2d_box_illustration(
-                st.session_state.get('box_length', 0),
-                st.session_state.get('box_width', 0),
-                st.session_state.get('box_height', 0),
-                dimension_unit
-            )
-            # Use HTML component to ensure SVG renders properly
-            st.components.v1.html(f"""
-            <div style="width: 100%; height: 500px; display: flex; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);">
-                {box_svg}
-            </div>
-            """, height=500)
+            st.markdown("#### 3D Box Preview")
+            
+            # Get current values - handle 0 properly
+            curr_length = st.session_state.get('box_length', 0)
+            curr_width = st.session_state.get('box_width', 0)
+            curr_height = st.session_state.get('box_height', 0)
+            
+            if curr_length > 0 and curr_width > 0 and curr_height > 0:
+                # Calculate efficiency if we have product volume
+                if 'primary_volume_mm3' in st.session_state and st.session_state.primary_volume_mm3 > 0:
+                    # Calculate box volume in mm3
+                    dim_to_mm = {
+                        'mm': 1,
+                        'cm': 10,
+                        'inches': 25.4,
+                        'feet': 304.8
+                    }
+                    box_vol_mm3 = (curr_length * dim_to_mm[dimension_unit]) * \
+                                 (curr_width * dim_to_mm[dimension_unit]) * \
+                                 (curr_height * dim_to_mm[dimension_unit])
+                    
+                    product_vol_mm3 = st.session_state.get('total_product_volume_mm3', 
+                                                           st.session_state['primary_volume_mm3'])
+                    efficiency_pct = (product_vol_mm3 / box_vol_mm3 * 100) if box_vol_mm3 > 0 else 0
+                else:
+                    efficiency_pct = 50  # Default preview
+                
+                # Create 3D preview using the existing function
+                preview_fig = create_3d_box_visualization(
+                    curr_length,
+                    curr_width,
+                    curr_height,
+                    efficiency_pct,
+                    dimension_unit
+                )
+                
+                # Match height to input section
+                preview_fig.update_layout(height=400)
+                st.plotly_chart(preview_fig, use_container_width=True, key="box_preview_3d")
+            else:
+                # Placeholder when no dimensions
+                st.markdown("""
+                <div style="height: 400px; display: flex; align-items: center; justify-content: center; 
+                            background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);">
+                    <div style="text-align: center; color: #64748b;">
+                        <div style="font-size: 3rem; margin-bottom: 16px;">📦</div>
+                        <div style="font-size: 1.1rem;">Enter dimensions to see 3D preview</div>
+                        <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.7;">Interactive • Rotate • Zoom</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
         
         # Box Volume Results (below the preview)
         if 'box_volume_mm3' in st.session_state:
@@ -1697,21 +1821,31 @@ with tab1:
                     </div>
                     """, unsafe_allow_html=True)
         
+        # Persistent Bottom Navigation - All 3 Sections
         st.markdown("---")
-        nav_col1, nav_col2, nav_spacer = st.columns([1, 1, 2])
+        st.markdown("### 🧭 Quick Navigation")
+        nav_col1, nav_col2, nav_col3 = st.columns(3)
         
         with nav_col1:
-            if st.button("← Back to Primary", use_container_width=True, key="back_to_primary"):
+            if st.button("📊 Primary Calculator", use_container_width=True, type="secondary", key="sec_to_primary"):
                 st.session_state.analyzer_section = 'primary'
                 st.rerun()
         
         with nav_col2:
-            if st.button("📊 Volume Analysis →", use_container_width=True, type="primary", key="to_analysis_from_secondary"):
+            st.button(
+                "📦 Secondary Packaging",
+                use_container_width=True,
+                disabled=True,  # Current section
+                type="primary"
+            )
+        
+        with nav_col3:
+            if st.button("📈 Volume Analysis", use_container_width=True, type="secondary", key="sec_to_analysis"):
                 if 'box_volume_mm3' in st.session_state:
                     st.session_state.analyzer_section = 'analysis'
                     st.rerun()
                 else:
-                    st.warning("⚠️ Please calculate box volume first")
+                    st.warning("⚠️ Calculate box volume first")
     
     # SECTION 3: VOLUME ANALYSIS (FULL SCREEN VISUALIZATIONS!)
     elif st.session_state.analyzer_section == 'analysis':
@@ -1778,10 +1912,28 @@ with tab1:
             else:
                 st.success(f"✅ Box has sufficient space with {remaining_volume_result:,.2f} {remaining_unit} remaining")
             
+            # Persistent Bottom Navigation - All 3 Sections
             st.markdown("---")
-            if st.button("← Back to Secondary Packaging", use_container_width=True, key="back_to_secondary"):
-                st.session_state.analyzer_section = 'secondary'
-                st.rerun()
+            st.markdown("### 🧭 Quick Navigation")
+            nav_col1, nav_col2, nav_col3 = st.columns(3)
+            
+            with nav_col1:
+                if st.button("📊 Primary Calculator", use_container_width=True, type="secondary", key="ana_to_primary"):
+                    st.session_state.analyzer_section = 'primary'
+                    st.rerun()
+            
+            with nav_col2:
+                if st.button("📦 Secondary Packaging", use_container_width=True, type="secondary", key="ana_to_secondary"):
+                    st.session_state.analyzer_section = 'secondary'
+                    st.rerun()
+            
+            with nav_col3:
+                st.button(
+                    "📈 Volume Analysis",
+                    use_container_width=True,
+                    disabled=True,  # Current section
+                    type="primary"
+                )
 
 # END OF SECTION NAVIGATION
 # TAB 2: Project Results
@@ -2201,11 +2353,9 @@ with tab2:
             projects_with_boxes = [p for p in st.session_state.loaded_projects_overview if p.get('box_volume_mm3', 0) > 0]
             
             if projects_with_boxes:
-                comparison_unit = st.selectbox(
-                    "Select unit for comparison:",
-                    ["cubic mm", "cubic cm", "cubic inches", "cubic feet"],
-                    key="comparison_unit_select"
-                )
+                # Use global unit preference instead of dropdown
+                comparison_unit = st.session_state.pref_volume_unit
+                st.info(f"ℹ️ Using **{comparison_unit}** (set in Unit Preferences)")
                 
                 # Conversion factors from mm³
                 mm3_to_unit = {
@@ -2217,6 +2367,7 @@ with tab2:
                 
                 conversion_factor = mm3_to_unit[comparison_unit]
                 
+                # Display each project with all data in compact format
                 for project in projects_with_boxes:
                     box_volume_mm3 = project['box_volume_mm3']
                     product_volume_mm3 = project['primary_volume_mm3']
@@ -2235,72 +2386,49 @@ with tab2:
                         percentage_remaining = 0
                         percentage_used = 0
                     
-                    # Display comparison card
+                    # Display project card with all info
                     with st.container():
-                        st.markdown(f"### {project['project_name']}")
+                        st.markdown(f"### 📦 {project['project_name']} (Project #{project['project_number']})")
                         
-                        col1, col2, col3, col4, col5 = st.columns(5)
+                        # Row 1: Volume metrics
+                        vol_col1, vol_col2, vol_col3 = st.columns(3)
                         
-                        with col1:
-                            st.metric(
-                                "Box Volume",
-                                f"{box_volume:,.2f}",
-                                delta=None
-                            )
+                        with vol_col1:
+                            st.metric("Box Volume", f"{box_volume:,.2f}", delta=None)
                             st.caption(comparison_unit)
                         
-                        with col2:
-                            st.metric(
-                                "Product Volume",
-                                f"{product_volume:,.2f}",
-                                delta=f"{percentage_used:.1f}% used"
-                            )
+                        with vol_col2:
+                            st.metric("Product Volume", f"{product_volume:,.2f}", delta=f"{percentage_used:.1f}% used")
                             st.caption(comparison_unit)
                         
-                        with col3:
-                            st.metric(
-                                "Remaining Volume",
-                                f"{remaining_volume:,.2f}",
-                                delta=f"{percentage_remaining:.1f}% free" if remaining_volume >= 0 else "Overflow!"
-                            )
+                        with vol_col3:
+                            st.metric("Remaining Volume", f"{remaining_volume:,.2f}", 
+                                     delta=f"{percentage_remaining:.1f}% free" if remaining_volume >= 0 else "Overflow!")
                             st.caption(comparison_unit)
                         
-                        with col4:
-                            # Volume Efficiency Percentage
-                            if percentage_used >= 80:
-                                eff_delta = "Excellent"
-                                eff_color = "normal"
-                            elif percentage_used >= 60:
-                                eff_delta = "Good"
-                                eff_color = "normal"
-                            elif percentage_used >= 40:
-                                eff_delta = "Moderate"
-                                eff_color = "off"
-                            else:
-                                eff_delta = "Low"
-                                eff_color = "inverse"
-                            
-                            st.metric(
-                                "Volume Efficiency",
-                                f"{percentage_used:.1f}%",
-                                delta=eff_delta,
-                                delta_color=eff_color
-                            )
-                            st.caption("Space Utilization")
+                        # Row 2: Efficiency bar graph (full width)
+                        st.markdown("#### Remaining Volume Efficiency")
                         
-                        with col5:
-                            # Visual indicator
-                            if percentage_remaining >= 20:
-                                st.success("✅ Good Space")
-                            elif percentage_remaining >= 5:
-                                st.warning("⚠️ Tight Fit")
-                            else:
-                                st.error("❌ Too Full")
+                        # Determine efficiency level
+                        if percentage_used >= 85:
+                            eff_label = "Excellent"
+                        elif percentage_used >= 75:
+                            eff_label = "Good"
+                        elif percentage_used >= 60:
+                            eff_label = "Fair"
+                        else:
+                            eff_label = "Poor"
                         
-                        # Progress bar
-                        if box_volume_mm3 > 0:
-                            st.progress(min(percentage_used / 100, 1.0))
-                            st.caption(f"Space Utilization: {percentage_used:.1f}% | Remaining: {percentage_remaining:.1f}%")
+                        # Show efficiency percentage with label
+                        eff_info_col1, eff_info_col2 = st.columns([1, 3])
+                        with eff_info_col1:
+                            st.markdown(f"**{percentage_used:.1f}%** - {eff_label}")
+                        
+                        # Interactive bar graph
+                        bar_fig = create_mini_efficiency_bar(percentage_used)
+                        # Make it taller for better visibility
+                        bar_fig.update_layout(height=50)
+                        st.plotly_chart(bar_fig, use_container_width=True, key=f"efficiency_bar_{project['project_number']}")
                         
                         st.markdown("---")
             else:
