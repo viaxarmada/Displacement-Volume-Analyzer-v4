@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 import plotly.graph_objects as go
 import plotly.express as px
+import numpy as np
 
 # Page configuration
 st.set_page_config(
@@ -15,231 +16,488 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for styling
+# Custom CSS for modern, sophisticated engineering design
 st.markdown("""
 <style>
-    /* Modern Color System */
-    :root {
-        --primary: #2563eb;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --info: #06b6d4;
-        --bg-dark: #0f172a;
-        --surface: #1e293b;
-        --surface-light: #334155;
+    /* Import distinctive fonts - DM Sans for precision + JetBrains Mono for technical */
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+    
+    * {
+        font-family: 'DM Sans', sans-serif;
     }
     
+    /* Technical data uses monospace */
+    .mono {
+        font-family: 'JetBrains Mono', monospace;
+    }
+    
+    /* Sophisticated dark background with subtle depth */
     .main {
-        background-color: #0a1929;
+        background: #050b14;
+        background-image: 
+            radial-gradient(at 40% 20%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
+            radial-gradient(at 80% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+            radial-gradient(at 0% 50%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+        position: relative;
     }
     
-    /* Tabs Styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-        background-color: transparent;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        background: linear-gradient(135deg, #1e3a5f 0%, #132f4c 100%);
-        border-radius: 8px 8px 0px 0px;
-        padding: 10px 20px;
-        color: white;
-        font-weight: bold;
-        transition: all 0.3s ease;
-        border: 2px solid transparent;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-        transform: translateY(-2px);
-        border-color: #60a5fa;
-    }
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        border-color: #3b82f6;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    /* Noise texture overlay for depth */
+    .main::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.02;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='3.5' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 1;
     }
     
-    /* Metric Cards */
-    .metric-card {
-        background: linear-gradient(135deg, #1e3a5f 0%, #132f4c 100%);
-        padding: 20px;
-        border-radius: 12px;
-        border: 2px solid #2196f3;
-        box-shadow: 0 4px 6px rgba(33, 150, 243, 0.3);
-        transition: all 0.3s ease;
-        animation: slideIn 0.5s ease-out;
+    /* Refined glassmorphism cards with precision borders */
+    .glass-card {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 
+            0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+            0 20px 60px rgba(0, 0, 0, 0.5);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
     }
-    .metric-card:hover {
+    
+    /* Subtle gradient border on hover */
+    .glass-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    
+    .glass-card:hover::before {
+        opacity: 1;
+    }
+    
+    .glass-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(33, 150, 243, 0.5);
-        border-color: #60a5fa;
+        box-shadow: 
+            0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+            0 30px 80px rgba(59, 130, 246, 0.15);
+        border-color: rgba(96, 165, 250, 0.3);
     }
     
-    /* Dashboard Cards */
-    .dashboard-card {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        padding: 24px;
+    /* Modern tab system with active indicators */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 6px;
+        background: rgba(15, 23, 42, 0.6);
+        padding: 6px;
         border-radius: 16px;
-        border: 1px solid #334155;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        height: 48px;
+        background: rgba(30, 41, 59, 0.4);  /* More visible inactive state */
+        border-radius: 12px;
+        padding: 12px 28px;
+        color: #94a3b8;  /* Brighter text for better visibility */
+        font-weight: 600;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(148, 163, 184, 0.2);  /* Visible border */
+        position: relative;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(59, 130, 246, 0.15);  /* Stronger hover state */
+        color: #cbd5e1;
+        border-color: rgba(59, 130, 246, 0.4);
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        color: white;
+        border-color: rgba(59, 130, 246, 0.5);
+        box-shadow: 
+            0 6px 20px rgba(59, 130, 246, 0.4),
+            0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+        transform: translateY(-2px);
+    }
+    
+    /* Sleeker buttons - shorter height */
+    .stButton>button {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        color: white;
+        border: none;
+        padding: 8px 20px;  /* Reduced from 14px 36px */
+        font-weight: 700;
+        border-radius: 10px;
+        font-size: 13px;  /* Slightly smaller */
+        letter-spacing: 0.02em;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 
+            0 3px 12px rgba(59, 130, 246, 0.35),
+            0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+        position: relative;
+        overflow: hidden;
+        min-height: 38px;  /* Sleeker minimum height */
+    }
+    
+    /* Secondary button style (for toggle buttons) */
+    .stButton>button[kind="secondary"] {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        padding: 8px 20px;
+    }
+    
+    .stButton>button[kind="secondary"]:hover {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.5);
+    }
+    
+    /* Mobile responsiveness - keep buttons and columns side-by-side */
+    @media (max-width: 768px) {
+        /* Force columns to stay side-by-side on mobile */
+        .row-widget.stHorizontalBlock {
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+        }
+        
+        /* Keep buttons side-by-side */
+        .stButton {
+            min-width: fit-content;
+            flex-shrink: 0;
+        }
+        
+        .stButton>button {
+            padding: 8px 16px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        /* Responsive header */
+        h1 {
+            font-size: 1.5rem !important;
+        }
+        
+        /* Tabs stay horizontal */
+        .stTabs [data-baseweb="tab-list"] {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            min-width: fit-content;
+            padding: 10px 20px;
+            font-size: 13px;
+        }
+        
+        /* Input fields stay side-by-side */
+        .stNumberInput, .stTextInput, .stSelectbox {
+            min-width: 120px;
+        }
+    }
+    
+    /* Precision metric cards with technical aesthetic */
+    .metric-card {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%);
+        backdrop-filter: blur(15px);
+        padding: 28px;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        box-shadow: 
+            0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+            0 12px 32px rgba(0, 0, 0, 0.4);
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Animated shine effect */
+    .metric-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        bottom: -50%;
+        left: -50%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+        transform: translateX(-100%) rotate(45deg);
+        transition: transform 0.6s;
+    }
+    
+    .metric-card:hover::after {
+        transform: translateX(100%) rotate(45deg);
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-4px) scale(1.01);
+        border-color: rgba(96, 165, 250, 0.25);
+        box-shadow: 
+            0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+            0 20px 48px rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Technical result values with mono font */
+    .result-value {
+        font-size: 3.5rem;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+        margin: 16px 0;
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: countUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        letter-spacing: -0.02em;
+    }
+    
+    @keyframes countUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .result-unit {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    
+    /* Button hover effects */
+    
+    .stButton>button:active {
+        transform: translateY(0);
+        box-shadow: 
+            0 2px 8px rgba(59, 130, 246, 0.3),
+            0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    }
+    
+    /* Refined input fields */
+    .stNumberInput>div>div>input,
+    .stTextInput>div>div>input,
+    .stTextArea>div>div>textarea {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 10px;
+        color: #e2e8f0;
+        padding: 14px 16px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 15px;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    }
+    
+    .stNumberInput>div>div>input:focus,
+    .stTextInput>div>div>input:focus,
+    .stTextArea>div>div>textarea:focus {
+        background: rgba(15, 23, 42, 0.8);
+        border-color: #3b82f6;
+        box-shadow: 
+            0 0 0 3px rgba(59, 130, 246, 0.12),
+            0 0 0 1px rgba(59, 130, 246, 0.3) inset;
+        outline: none;
+    }
+    
+    /* Modern select boxes */
+    .stSelectbox>div>div {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 10px;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    }
+    
+    .stSelectbox>div>div:hover {
+        border-color: #3b82f6;
+        background: rgba(15, 23, 42, 0.7);
+    }
+    
+    /* Gradient headers with technical precision */
+    h1 {
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #c084fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        margin-bottom: 8px;
+    }
+    
+    h2 {
+        color: #f1f5f9;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-top: 32px;
         margin-bottom: 16px;
     }
-    .dashboard-card:hover {
-        border-color: #2563eb;
-        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+    
+    h3 {
+        color: #cbd5e1;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-top: 24px;
+        margin-bottom: 12px;
     }
     
-    /* Project Cards */
-    .project-card {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        padding: 20px;
+    /* Elegant info boxes */
+    .stInfo, .stSuccess, .stWarning, .stError {
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(10px);
         border-radius: 12px;
-        border-left: 4px solid #2563eb;
-        margin: 12px 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
-        animation: slideIn 0.4s ease-out;
-    }
-    .project-card:hover {
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        border-left-color: #60a5fa;
+        border-left-width: 3px;
+        border-right: 1px solid rgba(148, 163, 184, 0.1);
+        border-top: 1px solid rgba(148, 163, 184, 0.1);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Result Values */
-    .result-value {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin: 10px 0;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-    .result-unit {
-        font-size: 1.2rem;
-        color: #90caf9;
-        font-weight: 500;
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
     
-    /* Efficiency Badge */
-    .efficiency-badge {
-        display: inline-block;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-weight: bold;
-        font-size: 0.9rem;
-        margin: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    .badge-excellent {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-    }
-    .badge-good {
-        background: linear-gradient(135deg, #8bc34a 0%, #689f38 100%);
-        color: white;
-    }
-    .badge-moderate {
-        background: linear-gradient(135deg, #ffc107 0%, #ffa000 100%);
-        color: #000;
-    }
-    .badge-low {
-        background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-        color: white;
+    /* Styled progress bars */
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
     }
     
-    /* Animations */
-    @keyframes slideIn {
+    /* Subtle dividers */
+    hr {
+        border: none;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.15), transparent);
+        margin: 48px 0;
+    }
+    
+    /* Refined expanders */
+    .streamlit-expanderHeader {
+        background: rgba(15, 23, 42, 0.4);
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        font-weight: 600;
+        transition: all 0.25s ease;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: rgba(59, 130, 246, 0.08);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Polished dataframes */
+    .stDataFrame {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.3);
+        border-radius: 6px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(139, 92, 246, 0.4));
+        border-radius: 6px;
+        border: 2px solid rgba(15, 23, 42, 0.3);
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.6), rgba(139, 92, 246, 0.6));
+    }
+    
+    /* Smooth page animations */
+    .element-container {
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
         from { 
-            opacity: 0; 
-            transform: translateY(20px);
+            opacity: 0;
+            transform: translateY(10px);
         }
         to { 
-            opacity: 1; 
+            opacity: 1;
             transform: translateY(0);
         }
     }
     
-    @keyframes pulse {
-        0%, 100% { 
-            transform: scale(1);
-        }
-        50% { 
-            transform: scale(1.02);
-        }
+    /* Plotly chart refinements */
+    .js-plotly-plot {
+        border-radius: 16px;
+        overflow: hidden;
     }
     
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+    /* Hover effects for interactive elements */
+    .stCheckbox, .stRadio {
+        transition: transform 0.2s ease;
     }
     
-    /* Button Enhancements */
-    .stButton>button {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        color: white;
-        border: none;
-        padding: 10px 24px;
-        font-weight: bold;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
-    }
-    .stButton>button:hover {
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5);
-        transform: translateY(-2px);
+    .stCheckbox:hover, .stRadio:hover {
+        transform: translateX(4px);
     }
     
-    /* Success Message */
-    .success-message {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        padding: 12px 16px;
-        border-radius: 8px;
-        border-left: 4px solid #34d399;
-        animation: slideIn 0.3s ease-out;
+    /* Label styling */
+    label {
+        color: #94a3b8 !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        letter-spacing: 0.01em !important;
     }
     
-    /* Header Metrics */
-    .header-metric {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        padding: 16px;
-        border-radius: 12px;
-        border: 1px solid #334155;
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-    .header-metric:hover {
-        border-color: #2563eb;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
-    }
-    .header-metric-value {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #60a5fa;
-    }
-    .header-metric-label {
-        font-size: 0.9rem;
-        color: #94a3b8;
-        margin-top: 4px;
+    /* Section headers with accent */
+    .section-header {
+        position: relative;
+        padding-left: 16px;
+        margin: 32px 0 16px 0;
     }
     
-    /* Progress Bar Custom */
-    .stProgress > div > div > div {
-        background: linear-gradient(90deg, #2563eb 0%, #06b6d4 100%);
-        border-radius: 4px;
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .metric-card {
-            padding: 16px;
-        }
-        .result-value {
-            font-size: 2rem;
-        }
+    .section-header::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+        border-radius: 2px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -298,6 +556,411 @@ def calculate_volume(weight, unit):
         'in³': weight * results['in³']
     }
 
+def create_efficiency_gauge(efficiency_percentage):
+    """Create animated gauge chart for volume efficiency"""
+    # Determine color and status
+    if efficiency_percentage >= 95:
+        color = "#10b981"  # Emerald green
+        status = "OPTIMAL"
+    elif efficiency_percentage >= 85:
+        color = "#3b82f6"  # Blue
+        status = "EXCELLENT"
+    elif efficiency_percentage >= 75:
+        color = "#8b5cf6"  # Purple
+        status = "GOOD"
+    elif efficiency_percentage >= 60:
+        color = "#f59e0b"  # Amber
+        status = "MODERATE"
+    elif efficiency_percentage >= 40:
+        color = "#f97316"  # Orange
+        status = "POOR"
+    else:
+        color = "#ef4444"  # Red
+        status = "CRITICAL"
+    
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number+delta",
+        value = efficiency_percentage,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': f"<b>{status}</b>", 'font': {'size': 24, 'color': color}},
+        number = {
+            'suffix': "%",
+            'font': {'size': 48, 'color': color},
+            'valueformat': '.1f'
+        },
+        delta = {
+            'reference': 85,
+            'increasing': {'color': "#10b981"},
+            'decreasing': {'color': "#ef4444"}
+        },
+        gauge = {
+            'axis': {
+                'range': [None, 100],
+                'tickwidth': 2,
+                'tickcolor': "rgba(148, 163, 184, 0.3)",
+                'tickfont': {'color': '#94a3b8', 'size': 12}
+            },
+            'bar': {'color': color, 'thickness': 0.7},
+            'bgcolor': "rgba(255,255,255,0.05)",
+            'borderwidth': 2,
+            'bordercolor': "rgba(148, 163, 184, 0.2)",
+            'steps': [
+                {'range': [0, 40], 'color': 'rgba(239, 68, 68, 0.1)'},
+                {'range': [40, 60], 'color': 'rgba(249, 115, 22, 0.1)'},
+                {'range': [60, 75], 'color': 'rgba(245, 158, 11, 0.1)'},
+                {'range': [75, 85], 'color': 'rgba(139, 92, 246, 0.1)'},
+                {'range': [85, 95], 'color': 'rgba(59, 130, 246, 0.1)'},
+                {'range': [95, 100], 'color': 'rgba(16, 185, 129, 0.1)'}
+            ],
+            'threshold': {
+                'line': {'color': "#60a5fa", 'width': 3},
+                'thickness': 0.75,
+                'value': 85
+            }
+        }
+    ))
+    
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font={'color': "#e2e8f0"},
+        height=300,
+        margin=dict(l=20, r=20, t=60, b=20)
+    )
+    
+    return fig
+
+def create_3d_box_visualization(length, width, height, product_volume_pct, dimension_unit='inches'):
+    """Create interactive 3D box with product fill visualization"""
+    # Create box wireframe
+    x = [0, length, length, 0, 0, length, length, 0]
+    y = [0, 0, width, width, 0, 0, width, width]
+    z = [0, 0, 0, 0, height, height, height, height]
+    
+    # Define the 12 edges of the box
+    edges = [
+        [0,1], [1,2], [2,3], [3,0],  # bottom
+        [4,5], [5,6], [6,7], [7,4],  # top
+        [0,4], [1,5], [2,6], [3,7]   # vertical
+    ]
+    
+    # Create traces for box edges
+    edge_traces = []
+    for edge in edges:
+        edge_traces.append(go.Scatter3d(
+            x=[x[edge[0]], x[edge[1]]],
+            y=[y[edge[0]], y[edge[1]]],
+            z=[z[edge[0]], z[edge[1]]],
+            mode='lines',
+            line=dict(color='rgba(96, 165, 250, 0.6)', width=3),
+            hoverinfo='skip',
+            showlegend=False
+        ))
+    
+    # Create filled product volume (as a box inside)
+    fill_height = height * (product_volume_pct / 100)
+    
+    # Product volume mesh
+    product_trace = go.Mesh3d(
+        x=[0, length, length, 0, 0, length, length, 0],
+        y=[0, 0, width, width, 0, 0, width, width],
+        z=[0, 0, 0, 0, fill_height, fill_height, fill_height, fill_height],
+        i=[0, 0, 0, 0, 4, 4, 2, 2, 1, 1],
+        j=[1, 2, 4, 3, 5, 6, 6, 3, 5, 2],
+        k=[2, 3, 5, 4, 6, 7, 7, 7, 6, 6],
+        opacity=0.7,
+        color='#3b82f6',
+        flatshading=True,
+        hovertemplate=f'Fill Level: {product_volume_pct:.1f}%<extra></extra>',
+        name='Product Volume'
+    )
+    
+    # Combine all traces
+    fig = go.Figure(data=edge_traces + [product_trace])
+    
+    fig.update_layout(
+        scene=dict(
+            xaxis=dict(
+                title=dict(text=f'Length ({dimension_unit})', font=dict(color='#94a3b8')),
+                backgroundcolor="rgba(0,0,0,0)",
+                gridcolor="rgba(148, 163, 184, 0.2)",
+                showbackground=True,
+                zerolinecolor="rgba(148, 163, 184, 0.3)"
+            ),
+            yaxis=dict(
+                title=dict(text=f'Width ({dimension_unit})', font=dict(color='#94a3b8')),
+                backgroundcolor="rgba(0,0,0,0)",
+                gridcolor="rgba(148, 163, 184, 0.2)",
+                showbackground=True,
+                zerolinecolor="rgba(148, 163, 184, 0.3)"
+            ),
+            zaxis=dict(
+                title=dict(text=f'Height ({dimension_unit})', font=dict(color='#94a3b8')),
+                backgroundcolor="rgba(0,0,0,0)",
+                gridcolor="rgba(148, 163, 184, 0.2)",
+                showbackground=True,
+                zerolinecolor="rgba(148, 163, 184, 0.3)"
+            ),
+            camera=dict(
+                eye=dict(x=1.5, y=1.5, z=1.3)
+            ),
+            aspectmode='data'
+        ),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#e2e8f0'),
+        height=600,  # Taller for better screen fill
+        margin=dict(l=0, r=0, t=30, b=0),
+        showlegend=False,
+        title=dict(
+            text=f"<b>3D Box Preview</b> - {product_volume_pct:.1f}% Filled",
+            font=dict(size=16, color='#e2e8f0'),
+            x=0.5,
+            xanchor='center'
+        )
+    )
+    
+    return fig
+
+def create_volume_comparison_chart(box_volume, product_volume, unit='cubic inches'):
+    """Create horizontal stacked bar chart for volume comparison"""
+    efficiency = (product_volume / box_volume * 100) if box_volume > 0 else 0
+    remaining = box_volume - product_volume
+    
+    fig = go.Figure()
+    
+    # Product volume bar
+    fig.add_trace(go.Bar(
+        y=['Utilization'],
+        x=[product_volume],
+        name='Product Volume',
+        orientation='h',
+        marker=dict(
+            color='#3b82f6',
+            line=dict(color='#2563eb', width=2)
+        ),
+        text=f'{product_volume:.2f} {unit}<br>({efficiency:.1f}%)',
+        textposition='inside',
+        textfont=dict(color='white', size=14),
+        hovertemplate=f'Product: {product_volume:.2f} {unit}<br>Efficiency: {efficiency:.1f}%<extra></extra>'
+    ))
+    
+    # Remaining space bar
+    fig.add_trace(go.Bar(
+        y=['Utilization'],
+        x=[remaining],
+        name='Remaining Space',
+        orientation='h',
+        marker=dict(
+            color='#10b981' if remaining > 0 else '#ef4444',
+            line=dict(color='#059669' if remaining > 0 else '#dc2626', width=2)
+        ),
+        text=f'{remaining:.2f} {unit}<br>({100-efficiency:.1f}%)',
+        textposition='inside',
+        textfont=dict(color='white', size=14),
+        hovertemplate=f'Remaining: {remaining:.2f} {unit}<br>Free: {100-efficiency:.1f}%<extra></extra>'
+    ))
+    
+    fig.update_layout(
+        barmode='stack',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#e2e8f0'),
+        xaxis=dict(
+            title=dict(text=f'Volume ({unit})', font=dict(color='#94a3b8')),
+            gridcolor='rgba(148, 163, 184, 0.2)',
+            zerolinecolor='rgba(148, 163, 184, 0.3)'
+        ),
+        yaxis=dict(
+            showticklabels=False,
+            showgrid=False
+        ),
+        height=150,
+        margin=dict(l=0, r=0, t=30, b=40),
+        showlegend=True,
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='center',
+            x=0.5,
+            font=dict(size=12)
+        ),
+        hovermode='closest'
+    )
+    
+    return fig
+
+def create_donut_chart(efficiency_percentage):
+    """Create donut chart for space distribution"""
+    remaining_pct = 100 - efficiency_percentage
+    
+    # Determine colors based on efficiency
+    if efficiency_percentage >= 85:
+        product_color = '#10b981'
+    elif efficiency_percentage >= 75:
+        product_color = '#3b82f6'
+    elif efficiency_percentage >= 60:
+        product_color = '#f59e0b'
+    else:
+        product_color = '#ef4444'
+    
+    remaining_color = '#94a3b8' if remaining_pct > 0 else '#ef4444'
+    
+    fig = go.Figure(data=[go.Pie(
+        labels=['Product Volume', 'Free Space'],
+        values=[efficiency_percentage, remaining_pct],
+        hole=.6,
+        marker=dict(
+            colors=[product_color, remaining_color],
+            line=dict(color='rgba(10, 25, 41, 0.8)', width=3)
+        ),
+        textinfo='label+percent',
+        textfont=dict(size=13, color='white'),
+        hovertemplate='<b>%{label}</b><br>%{value:.1f}%<extra></extra>',
+        pull=[0.05, 0]
+    )])
+    
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#e2e8f0'),
+        showlegend=True,
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=-0.15,
+            xanchor='center',
+            x=0.5,
+            font=dict(size=12)
+        ),
+        height=300,
+        margin=dict(l=20, r=20, t=40, b=60),
+        annotations=[dict(
+            text=f'<b>{efficiency_percentage:.1f}%</b><br><span style="font-size:12px">Filled</span>',
+            x=0.5, y=0.5,
+            font=dict(size=24, color=product_color),
+            showarrow=False
+        )]
+    )
+    
+    return fig
+
+def create_2d_box_illustration(length, width, height, unit='inches'):
+    """Create dynamic 2D box illustration with dimension callouts"""
+    if length <= 0 or width <= 0 or height <= 0:
+        return """
+        <div style="text-align: center; padding: 100px 0; color: #64748b;">
+            <p style="font-size: 1.2rem;">📦</p>
+            <p>Enter dimensions to see preview</p>
+        </div>
+        """
+    
+    # Scale for visualization (keeping proportions)
+    max_dim = max(length, width, height)
+    scale = 300 / max_dim
+    
+    l_scaled = length * scale
+    w_scaled = width * scale * 0.6  # Perspective effect
+    h_scaled = height * scale
+    
+    # SVG dimensions
+    svg_width = 500
+    svg_height = 450
+    
+    # Center the box
+    offset_x = (svg_width - l_scaled - w_scaled) / 2
+    offset_y = (svg_height - h_scaled) / 2 + 50
+    
+    # Create SVG
+    svg = f"""
+    <svg width="{svg_width}" height="{svg_height}" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+        <defs>
+            <linearGradient id="boxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+                <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0.5" />
+            </linearGradient>
+            <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
+        
+        <!-- Back face -->
+        <polygon points="{offset_x + w_scaled},{offset_y} {offset_x + w_scaled + l_scaled},{offset_y} {offset_x + w_scaled + l_scaled},{offset_y + h_scaled} {offset_x + w_scaled},{offset_y + h_scaled}"
+                 fill="url(#boxGradient)" stroke="#60a5fa" stroke-width="2" opacity="0.4"/>
+        
+        <!-- Left face -->
+        <polygon points="{offset_x},{offset_y + w_scaled * 0.5} {offset_x + w_scaled},{offset_y} {offset_x + w_scaled},{offset_y + h_scaled} {offset_x},{offset_y + h_scaled + w_scaled * 0.5}"
+                 fill="url(#boxGradient)" stroke="#60a5fa" stroke-width="2" opacity="0.6"/>
+        
+        <!-- Front face -->
+        <polygon points="{offset_x},{offset_y + w_scaled * 0.5} {offset_x + l_scaled},{offset_y + w_scaled * 0.5} {offset_x + l_scaled},{offset_y + h_scaled + w_scaled * 0.5} {offset_x},{offset_y + h_scaled + w_scaled * 0.5}"
+                 fill="url(#boxGradient)" stroke="#60a5fa" stroke-width="3" filter="url(#glow)"/>
+        
+        <!-- Top face -->
+        <polygon points="{offset_x},{offset_y + w_scaled * 0.5} {offset_x + w_scaled},{offset_y} {offset_x + w_scaled + l_scaled},{offset_y} {offset_x + l_scaled},{offset_y + w_scaled * 0.5}"
+                 fill="url(#boxGradient)" stroke="#60a5fa" stroke-width="2" opacity="0.7"/>
+        
+        <!-- Length dimension line (bottom) -->
+        <line x1="{offset_x}" y1="{offset_y + h_scaled + w_scaled * 0.5 + 30}" 
+              x2="{offset_x + l_scaled}" y2="{offset_y + h_scaled + w_scaled * 0.5 + 30}" 
+              stroke="#10b981" stroke-width="2"/>
+        <line x1="{offset_x}" y1="{offset_y + h_scaled + w_scaled * 0.5 + 25}" 
+              x2="{offset_x}" y2="{offset_y + h_scaled + w_scaled * 0.5 + 35}" 
+              stroke="#10b981" stroke-width="2"/>
+        <line x1="{offset_x + l_scaled}" y1="{offset_y + h_scaled + w_scaled * 0.5 + 25}" 
+              x2="{offset_x + l_scaled}" y2="{offset_y + h_scaled + w_scaled * 0.5 + 35}" 
+              stroke="#10b981" stroke-width="2"/>
+        <text x="{offset_x + l_scaled/2}" y="{offset_y + h_scaled + w_scaled * 0.5 + 55}" 
+              fill="#10b981" font-size="16" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono, monospace">
+            L: {length:.1f} {unit}
+        </text>
+        
+        <!-- Height dimension line (left side) -->
+        <line x1="{offset_x - 30}" y1="{offset_y + w_scaled * 0.5}" 
+              x2="{offset_x - 30}" y2="{offset_y + h_scaled + w_scaled * 0.5}" 
+              stroke="#f59e0b" stroke-width="2"/>
+        <line x1="{offset_x - 35}" y1="{offset_y + w_scaled * 0.5}" 
+              x2="{offset_x - 25}" y2="{offset_y + w_scaled * 0.5}" 
+              stroke="#f59e0b" stroke-width="2"/>
+        <line x1="{offset_x - 35}" y1="{offset_y + h_scaled + w_scaled * 0.5}" 
+              x2="{offset_x - 25}" y2="{offset_y + h_scaled + w_scaled * 0.5}" 
+              stroke="#f59e0b" stroke-width="2"/>
+        <text x="{offset_x - 45}" y="{offset_y + h_scaled/2 + w_scaled * 0.5}" 
+              fill="#f59e0b" font-size="16" font-weight="bold" text-anchor="end" font-family="JetBrains Mono, monospace"
+              transform="rotate(-90 {offset_x - 45} {offset_y + h_scaled/2 + w_scaled * 0.5})">
+            H: {height:.1f} {unit}
+        </text>
+        
+        <!-- Width dimension line (top right) -->
+        <line x1="{offset_x + l_scaled}" y1="{offset_y + w_scaled * 0.5 - 30}" 
+              x2="{offset_x + l_scaled + w_scaled}" y2="{offset_y - 30}" 
+              stroke="#8b5cf6" stroke-width="2"/>
+        <line x1="{offset_x + l_scaled - 5}" y1="{offset_y + w_scaled * 0.5 - 25}" 
+              x2="{offset_x + l_scaled + 5}" y2="{offset_y + w_scaled * 0.5 - 35}" 
+              stroke="#8b5cf6" stroke-width="2"/>
+        <line x1="{offset_x + l_scaled + w_scaled - 5}" y1="{offset_y - 25}" 
+              x2="{offset_x + l_scaled + w_scaled + 5}" y2="{offset_y - 35}" 
+              stroke="#8b5cf6" stroke-width="2"/>
+        <text x="{offset_x + l_scaled + w_scaled/2 + 20}" y="{offset_y + w_scaled * 0.25 - 35}" 
+              fill="#8b5cf6" font-size="16" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono, monospace">
+            W: {width:.1f} {unit}
+        </text>
+        
+        <!-- Title -->
+        <text x="{svg_width/2}" y="30" 
+              fill="#e2e8f0" font-size="18" font-weight="bold" text-anchor="middle">
+            📦 Box Dimensions Preview
+        </text>
+    </svg>
+    """
+    
+    return svg
+
 def ensure_valid_json_file(filename, default_data=None):
     """Ensure JSON file exists and is valid"""
     if default_data is None:
@@ -340,68 +1003,25 @@ if 'samples' not in st.session_state:
 if 'show_success' not in st.session_state:
     st.session_state.show_success = False
 
-# Header
-col1, col2 = st.columns([1, 4])
+# Header - Mobile-friendly horizontal layout
+header_col1, header_col2 = st.columns([1, 6])
 
-with col1:
+with header_col1:
     # Display logo if available
     if os.path.exists('dva_logo.png'):
-        st.image('dva_logo.png', width=120)
+        st.image('dva_logo.png', width=100)
     else:
         st.markdown("# 🔬")
 
-with col2:
-    st.markdown("# Displacement Volume Analyzer")
-    st.markdown("*Based on Archimedes' Principle - Water density at 4°C (1 g/mL)*")
-
-st.markdown("---")
-
-# Dashboard Metrics Header
-st.markdown("### 📊 Quick Overview")
-metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
-
-with metrics_col1:
-    total_projects = len(st.session_state.projects) if 'projects' in st.session_state else 0
-    st.markdown(f"""
-    <div class="header-metric">
-        <div class="header-metric-value">{total_projects}</div>
-        <div class="header-metric-label">Total Projects</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with metrics_col2:
-    total_samples = len(st.session_state.samples) if 'samples' in st.session_state else 0
-    st.markdown(f"""
-    <div class="header-metric">
-        <div class="header-metric-value">{total_samples}</div>
-        <div class="header-metric-label">Primary Samples</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with metrics_col3:
-    # Calculate average efficiency
-    if 'projects' in st.session_state and st.session_state.projects:
-        projects_with_boxes = [p for p in st.session_state.projects if p.get('box_volume_mm3', 0) > 0]
-        if projects_with_boxes:
-            avg_eff = sum((p['primary_volume_mm3'] / p['box_volume_mm3']) * 100 for p in projects_with_boxes) / len(projects_with_boxes)
-        else:
-            avg_eff = 0
-    else:
-        avg_eff = 0
-    
-    st.markdown(f"""
-    <div class="header-metric">
-        <div class="header-metric-value">{avg_eff:.1f}%</div>
-        <div class="header-metric-label">Avg Efficiency</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with metrics_col4:
-    in_overview = len(st.session_state.loaded_projects_overview) if 'loaded_projects_overview' in st.session_state else 0
-    st.markdown(f"""
-    <div class="header-metric">
-        <div class="header-metric-value">{in_overview}</div>
-        <div class="header-metric-label">In Overview</div>
+with header_col2:
+    st.markdown("""
+    <div style="display: flex; align-items: center; height: 100px;">
+        <div>
+            <h1 style="margin: 0; padding: 0; line-height: 1.2;">Displacement Volume Analyzer</h1>
+            <p style="margin: 0; padding: 0; font-size: 0.75rem; color: #94a3b8; font-style: italic;">
+                Archimedes' Principle | Water at 4°C (1 g/mL)
+            </p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -436,13 +1056,24 @@ if 'projects' not in st.session_state:
 if 'current_project_id' not in st.session_state:
     st.session_state.current_project_id = None
 
+def get_next_project_number():
+    """Get the next available unique project number"""
+    if not st.session_state.projects:
+        return 1000
+    
+    # Get all existing project numbers
+    existing_numbers = [p['project_number'] for p in st.session_state.projects]
+    
+    # Find the maximum and add 1
+    return max(existing_numbers) + 1
+
 if 'project_counter' not in st.session_state:
     # Initialize counter from existing projects or start at 1000
-    if st.session_state.projects:
-        max_id = max([p['project_number'] for p in st.session_state.projects])
-        st.session_state.project_counter = max_id + 1
-    else:
-        st.session_state.project_counter = 1000
+    st.session_state.project_counter = get_next_project_number()
+
+# Initialize current project number to match counter
+if 'current_project_number' not in st.session_state:
+    st.session_state.current_project_number = st.session_state.project_counter
 
 # Initialize with default values on first load
 if 'app_initialized' not in st.session_state:
@@ -470,8 +1101,17 @@ def save_projects():
 
 def create_new_project():
     """Create a new project and reset form with default values"""
+    # Clear the current project ID to force new project mode
     st.session_state.current_project_id = None
-    st.session_state.project_counter += 1
+    
+    # Force recalculation of project number by clearing it temporarily
+    if 'current_project_number' in st.session_state:
+        del st.session_state['current_project_number']
+    
+    # Get next unique project number (checks against all existing projects)
+    next_number = get_next_project_number()
+    st.session_state.project_counter = next_number
+    st.session_state.current_project_number = next_number
     
     # Set default values for project info
     st.session_state.project_name = 'New Project'
@@ -495,6 +1135,7 @@ def create_new_project():
     if 'box_volume_mm3' in st.session_state:
         del st.session_state.box_volume_mm3
     
+    # Rerun to refresh display
     st.rerun()
 
 def save_current_project():
@@ -509,8 +1150,22 @@ def save_current_project():
     else:
         project_date_str = str(project_date)
     
+    current_number = st.session_state.get('current_project_number', st.session_state.project_counter)
+    
+    # Check for duplicate project numbers (only for new projects)
+    if st.session_state.current_project_id is None:
+        # This is a new project, check if number already exists
+        existing_numbers = [p['project_number'] for p in st.session_state.projects]
+        if current_number in existing_numbers:
+            # Number exists! Get next unique number
+            st.error(f"⚠️ Project #{current_number} already exists! Assigning new number...")
+            current_number = get_next_project_number()
+            st.session_state.current_project_number = current_number
+            st.session_state.project_counter = current_number
+            st.warning(f"✅ Assigned new project number: {current_number}")
+    
     project_data = {
-        'project_number': st.session_state.get('current_project_number', st.session_state.project_counter),
+        'project_number': current_number,
         'project_name': st.session_state.get('project_name', ''),
         'date': project_date_str,
         'designer': st.session_state.get('designer', ''),
@@ -541,6 +1196,7 @@ def save_current_project():
         # Add new project
         st.session_state.projects.append(project_data)
         st.session_state.current_project_id = project_data['project_number']
+        # Counter already incremented in create_new_project()
     
     save_projects()
     return True
@@ -577,484 +1233,552 @@ tab1, tab2, tab3, tab4 = st.tabs(["🔬 Analyzer", "📁 Project Results", "📋
 
 # TAB 1: Analyzer
 with tab1:
-    # Project Info Section
-    st.markdown("## Project Information")
+    # ========== INITIALIZE NAVIGATION STATE ==========
+    if 'analyzer_section' not in st.session_state:
+        st.session_state.analyzer_section = 'primary'  # primary, secondary, analysis
     
-    col_new, col_save = st.columns([1, 1])
+    if 'show_project_info' not in st.session_state:
+        st.session_state.show_project_info = False
     
-    with col_new:
-        if st.button("🆕 New Project", use_container_width=True):
-            create_new_project()
+    if 'show_unit_prefs' not in st.session_state:
+        st.session_state.show_unit_prefs = False
     
-    with col_save:
-        if st.button("💾 Save Project", use_container_width=True):
-            if save_current_project():
-                st.success("✅ Project saved successfully!")
-                time.sleep(1)
-                st.rerun()
+    # ========== TOP NAVIGATION BUTTONS ==========
+    top_col1, top_col2, top_spacer = st.columns([1, 1, 2])
     
-    # Project info fields
-    col1, col2 = st.columns([1, 1])
+    with top_col1:
+        if st.button("📋 Project Info" if not st.session_state.show_project_info else "📋 Hide Info", 
+                     use_container_width=True, 
+                     type="secondary",
+                     key="toggle_project_info"):
+            st.session_state.show_project_info = not st.session_state.show_project_info
+            st.rerun()
     
-    with col1:
-        project_number = st.text_input(
-            "Project Number",
-            value=str(st.session_state.get('current_project_number', st.session_state.project_counter)),
-            disabled=True,
-            key="project_number_display"
-        )
-        st.session_state.current_project_number = int(project_number)
-        
-        # Initialize project info if not present
-        if 'project_name' not in st.session_state:
-            st.session_state.project_name = 'New Project'
-        
-        project_name = st.text_input(
-            "Project Name",
-            placeholder="Enter project name",
-            key="project_name"
-        )
-        
-        # Auto-set current date (hidden from user)
-        if 'project_date' not in st.session_state:
-            st.session_state.project_date = datetime.now().date()
-        
-        # Display date (read-only)
-        st.text_input(
-            "Date",
-            value=st.session_state.project_date.strftime('%Y-%m-%d'),
-            disabled=True,
-            key="project_date_display"
-        )
+    with top_col2:
+        if st.button("⚙️ Units" if not st.session_state.show_unit_prefs else "⚙️ Hide", 
+                     use_container_width=True,
+                     type="secondary",
+                     key="toggle_unit_prefs"):
+            st.session_state.show_unit_prefs = not st.session_state.show_unit_prefs
+            st.rerun()
     
-    with col2:
-        # Initialize fields if not present
-        if 'designer' not in st.session_state:
-            st.session_state.designer = 'Designer Name'
-        if 'project_description' not in st.session_state:
-            st.session_state.project_description = 'Project description here'
-        if 'contact_info' not in st.session_state:
-            st.session_state.contact_info = 'contact@email.com'
-        
-        designer = st.text_input(
-            "Designer",
-            placeholder="Enter designer name",
-            key="designer"
-        )
-        
-        description = st.text_area(
-            "Description",
-            placeholder="Enter project description",
-            height=100,
-            key="project_description"
-        )
-        
-        contact = st.text_input(
-            "Contact Info",
-            placeholder="Email or phone",
-            key="contact_info"
-        )
-    
-    st.markdown("---")
-    
-    st.markdown("## Primary Product Volume Calculator")
-    
-    col1, col2 = st.columns([2, 3])
-    
-    with col1:
-        st.markdown("### Input")
-        
-        # Initialize session state if not present
-        if 'primary_weight' not in st.session_state:
-            st.session_state.primary_weight = 100.0
-        if 'primary_unit' not in st.session_state:
-            st.session_state.primary_unit = 'grams'
-        
-        weight = st.number_input(
-            "Weight of Water",
-            min_value=0.0,
-            step=0.1,
-            format="%.2f",
-            key="primary_weight"
-        )
-        
-        unit = st.selectbox(
-            "Unit",
-            ["grams", "ounces", "pounds", "kilograms"],
-            key="primary_unit"
-        )
-        
-        calculate_btn = st.button("🔬 Calculate Volume", use_container_width=True)
-    
-    with col2:
-        st.markdown("### Results")
-        
-        if calculate_btn or weight:
-            results = calculate_volume(weight, unit)
+    # ========== COLLAPSIBLE PROJECT INFORMATION ==========
+    if st.session_state.show_project_info:
+        with st.container():
+            st.markdown("### 📋 Project Information")
             
-            # Store primary volume in session state for later use
-            st.session_state.primary_volume_mm3 = results['mm³']
+            col_new, col_save = st.columns([1, 1])
             
-            # Display results in columns
-            result_col1, result_col2, result_col3 = st.columns(3)
+            with col_new:
+                if st.button("🆕 New", use_container_width=True, key="new_proj_btn"):
+                    create_new_project()
             
-            with result_col1:
+            with col_save:
+                if st.button("💾 Save", use_container_width=True, key="save_proj_btn"):
+                    if save_current_project():
+                        st.success("✅ Project saved successfully!")
+                        time.sleep(1)
+                        st.rerun()
+            
+            # Project number verification
+            if st.session_state.current_project_id is None:
+                next_num = get_next_project_number()
+                st.session_state.current_project_number = next_num
+                st.session_state.project_counter = next_num
+                
+                if st.session_state.projects:
+                    existing_nums = [p['project_number'] for p in st.session_state.projects]
+                    st.info(f"ℹ️ Existing projects: {sorted(existing_nums)} | Next: **{next_num}**")
+                else:
+                    st.info(f"ℹ️ No existing projects | Starting at: **{next_num}**")
+            else:
+                st.info(f"✏️ Editing Project #{st.session_state.current_project_id}")
+            
+            # Project info fields
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                project_number_display = st.text_input(
+                    "Project Number",
+                    value=str(st.session_state.current_project_number),
+                    disabled=True,
+                    key="project_number_display"
+                )
+                
+                if 'project_name' not in st.session_state:
+                    st.session_state.project_name = 'New Project'
+                
+                project_name = st.text_input(
+                    "Project Name",
+                    placeholder="Enter project name",
+                    key="project_name"
+                )
+                
+                if 'project_date' not in st.session_state:
+                    st.session_state.project_date = datetime.now().date()
+                
+                st.text_input(
+                    "Date",
+                    value=st.session_state.project_date.strftime('%Y-%m-%d'),
+                    disabled=True,
+                    key="project_date_display"
+                )
+            
+            with col2:
+                if 'designer' not in st.session_state:
+                    st.session_state.designer = 'Designer Name'
+                if 'project_description' not in st.session_state:
+                    st.session_state.project_description = 'Project description here'
+                if 'contact_info' not in st.session_state:
+                    st.session_state.contact_info = 'contact@email.com'
+                
+                designer = st.text_input(
+                    "Designer",
+                    placeholder="Enter designer name",
+                    key="designer"
+                )
+                
+                description = st.text_area(
+                    "Description",
+                    placeholder="Enter project description",
+                    height=100,
+                    key="project_description"
+                )
+                
+                contact = st.text_input(
+                    "Contact Info",
+                    placeholder="Email or phone",
+                    key="contact_info"
+                )
+        
+        st.markdown("---")
+    
+    # ========== COLLAPSIBLE UNIT PREFERENCES ==========
+    if st.session_state.show_unit_prefs:
+        with st.container():
+            st.markdown("### ⚙️ Unit Preferences")
+            st.markdown("*Set default units for all calculations in this project*")
+            
+            # Initialize unit preferences with Imperial/English defaults
+            if 'pref_dimension_unit' not in st.session_state:
+                st.session_state.pref_dimension_unit = 'inches'
+            if 'pref_weight_unit' not in st.session_state:
+                st.session_state.pref_weight_unit = 'ounces'
+            if 'pref_volume_unit' not in st.session_state:
+                st.session_state.pref_volume_unit = 'cubic inches'
+            
+            pref_col1, pref_col2, pref_col3 = st.columns(3)
+            
+            with pref_col1:
+                dimension_pref = st.selectbox(
+                    "📏 Dimension Unit",
+                    ['inches', 'feet', 'cm', 'mm'],
+                    key="pref_dimension_unit",
+                    help="Default unit for length/width/height measurements"
+                )
+            
+            with pref_col2:
+                weight_pref = st.selectbox(
+                    "⚖️ Weight Unit",
+                    ['ounces', 'pounds', 'grams', 'kilograms'],
+                    key="pref_weight_unit",
+                    help="Default unit for weight measurements"
+                )
+            
+            with pref_col3:
+                volume_pref = st.selectbox(
+                    "📦 Volume Unit",
+                    ['cubic inches', 'cubic feet', 'cubic cm', 'cubic mm'],
+                    key="pref_volume_unit",
+                    help="Default unit for volume display"
+                )
+        
+        st.markdown("---")
+    
+    # Initialize unit preferences (always, even if not showing)
+    if 'pref_dimension_unit' not in st.session_state:
+        st.session_state.pref_dimension_unit = 'inches'
+    if 'pref_weight_unit' not in st.session_state:
+        st.session_state.pref_weight_unit = 'ounces'
+    if 'pref_volume_unit' not in st.session_state:
+        st.session_state.pref_volume_unit = 'cubic inches'
+    
+
+    
+    
+    # SECTION 1: PRIMARY PRODUCT CALCULATOR
+    if st.session_state.analyzer_section == 'primary':
+        st.markdown("## 🔬 Primary Product Volume Calculator")
+        
+        col1, col2 = st.columns([2, 3])
+        
+        with col1:
+            st.markdown("### Input")
+            weight_unit = st.session_state.pref_weight_unit
+            weight = st.number_input(
+                f"Weight of Water ({weight_unit})",
+                min_value=0.0,
+                step=0.1,
+                format="%.2f",
+                help=f"Enter weight in {weight_unit}",
+                key="product_weight"
+            )
+            st.info(f"ℹ️ Using **{weight_unit}** (set in Unit Preferences)")
+        
+        with col2:
+            st.markdown("### Results")
+            if weight > 0:
+                dimension_unit = st.session_state.pref_dimension_unit
+                result_unit = st.session_state.pref_volume_unit
+                
+                # Weight is already in session_state via key="product_weight"
+                # Store the unit separately
+                if 'product_weight_unit' not in st.session_state or st.session_state.product_weight_unit != weight_unit:
+                    st.session_state.product_weight_unit = weight_unit
+                
+                weight_to_mm3 = {
+                    'grams': 1000,
+                    'ounces': 28316.8466,
+                    'pounds': 453592.37,
+                    'kilograms': 1000000
+                }
+                
+                volume_mm3 = weight * weight_to_mm3[weight_unit]
+                st.session_state.primary_volume_mm3 = volume_mm3
+                
+                mm3_to_display = {
+                    'cubic mm': 1,
+                    'cubic cm': 0.001,
+                    'cubic inches': 0.000061023744,
+                    'cubic feet': 0.000000035315
+                }
+                
+                result_value = volume_mm3 * mm3_to_display[result_unit]
+                
                 st.markdown(f"""
                 <div class="metric-card">
-                    <div style="color: #ff6b6b; font-weight: bold; font-size: 1.1rem;">Cubic Millimeters</div>
-                    <div class="result-value" style="color: #ff6b6b;">{results['mm³']:,.2f}</div>
-                    <div class="result-unit">mm³</div>
+                    <div style="color: #60a5fa; font-weight: bold; font-size: 1.2rem;">{result_unit.title()}</div>
+                    <div class="result-value">{result_value:.2f}</div>
+                    <div class="result-unit">{result_unit}</div>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            with result_col2:
-                st.markdown(f"""
-                <div class="metric-card">
-                    <div style="color: #4ecdc4; font-weight: bold; font-size: 1.1rem;">Cubic Centimeters</div>
-                    <div class="result-value" style="color: #4ecdc4;">{results['cm³']:,.2f}</div>
-                    <div class="result-unit">cm³</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with result_col3:
-                st.markdown(f"""
-                <div class="metric-card">
-                    <div style="color: #95e1d3; font-weight: bold; font-size: 1.1rem;">Cubic Inches</div>
-                    <div class="result-value" style="color: #95e1d3;">{results['in³']:,.3f}</div>
-                    <div class="result-unit">in³</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            # Conversion reference
+                
+                st.info(f"ℹ️ Displaying in **{result_unit}** (set in Unit Preferences)")
+        
+        # Conversion Reference - Compact
+        with st.expander("📐 Conversion Reference", expanded=False):
+            st.markdown("""
+            <div style="font-size: 0.85rem;">
+            <strong>1 US Fluid Ounce =</strong><br>
+            29,574 mm³ | 29.57 cm³ | 1.804 in³<br>
+            <em style="font-size: 0.75rem; color: #64748b;">Water at 4°C (1 g/mL)</em>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        if 'primary_volume_mm3' in st.session_state and st.session_state.primary_volume_mm3 > 0:
             st.markdown("---")
-            st.markdown("### Conversion Reference")
-            st.info(f"""
-            **1 {unit}** of water equals:
-            - {results['mm³']:,.2f} mm³
-            - {results['cm³']:,.2f} cm³  
-            - {results['in³']:,.3f} in³
-            """)
-    
-    # Secondary Packaging Section
-    st.markdown("---")
-    st.markdown("## Secondary Packaging")
-    st.markdown("### Box Dimensions Calculator")
-    
-    col1, col2 = st.columns([2, 3])
-    
-    with col1:
-        st.markdown("### Input Box Dimensions")
-        
-        # Initialize session state if not present
-        if 'box_length' not in st.session_state:
-            st.session_state.box_length = 10.0
-        if 'box_width' not in st.session_state:
-            st.session_state.box_width = 10.0
-        if 'box_height' not in st.session_state:
-            st.session_state.box_height = 10.0
-        if 'dimension_unit' not in st.session_state:
-            st.session_state.dimension_unit = 'cm'
-        if 'box_result_unit' not in st.session_state:
-            st.session_state.box_result_unit = 'cubic cm'
-        
-        # Dimension inputs
-        box_length = st.number_input(
-            "Length",
-            min_value=0.0,
-            step=0.1,
-            format="%.2f",
-            key="box_length"
-        )
-        
-        box_width = st.number_input(
-            "Width",
-            min_value=0.0,
-            step=0.1,
-            format="%.2f",
-            key="box_width"
-        )
-        
-        box_height = st.number_input(
-            "Height",
-            min_value=0.0,
-            step=0.1,
-            format="%.2f",
-            key="box_height"
-        )
-        
-        dimension_unit = st.selectbox(
-            "Dimension Unit",
-            ["cm", "mm", "inches", "feet"],
-            key="dimension_unit"
-        )
-        
-        result_unit_box = st.selectbox(
-            "Result Unit",
-            ["cubic cm", "cubic mm", "cubic inches"],
-            key="box_result_unit"
-        )
-        
-        calc_box_btn = st.button("📦 Calculate Box Volume", use_container_width=True)
-    
-    with col2:
-        st.markdown("### Box Volume Results")
-        
-        if calc_box_btn or (box_length and box_width and box_height):
-            # Convert all dimensions to mm first (base unit)
-            dimension_to_mm = {
-                "mm": 1,
-                "cm": 10,
-                "inches": 25.4,
-                "feet": 304.8
-            }
+            st.markdown("### Total Product Volume")
+            st.markdown("*Multiply by quantity for multiple units*")
             
-            # Calculate volume in mm³
-            length_mm = box_length * dimension_to_mm[dimension_unit]
-            width_mm = box_width * dimension_to_mm[dimension_unit]
-            height_mm = box_height * dimension_to_mm[dimension_unit]
+            total_col1, total_col2, total_col3 = st.columns([2, 1, 2])
             
-            box_volume_mm3 = length_mm * width_mm * height_mm
+            with total_col1:
+                result_unit = st.session_state.pref_volume_unit
+                mm3_to_display = {
+                    'cubic mm': 1,
+                    'cubic cm': 0.001,
+                    'cubic inches': 0.000061023744,
+                    'cubic feet': 0.000000035315
+                }
+                single_volume = st.session_state.primary_volume_mm3 * mm3_to_display[result_unit]
+                
+                st.markdown(f"""
+                <div class="metric-card" style="border-color: #8b5cf6;">
+                    <div style="color: #a78bfa; font-weight: bold;">Single Unit Volume</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: #a78bfa; margin: 10px 0;">
+                        {single_volume:.2f}
+                    </div>
+                    <div class="result-unit">{result_unit}</div>
+                </div>
+                """, unsafe_allow_html=True)
             
-            # Convert to requested unit
+            with total_col2:
+                st.markdown("<div style='text-align: center; font-size: 2rem; margin-top: 40px;'>×</div>", unsafe_allow_html=True)
+                quantity = st.number_input(
+                    "Quantity",
+                    min_value=1,
+                    step=1,
+                    value=1,
+                    key="product_quantity"
+                )
+            
+            with total_col3:
+                total_volume = single_volume * quantity
+                total_volume_mm3 = st.session_state.primary_volume_mm3 * quantity
+                st.session_state.total_product_volume_mm3 = total_volume_mm3
+                
+                st.markdown(f"""
+                <div class="metric-card" style="border-color: #ef4444;">
+                    <div style="color: #f87171; font-weight: bold;">Total Volume</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: #f87171; margin: 10px 0;">
+                        {total_volume:.2f}
+                    </div>
+                    <div class="result-unit">{result_unit}</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        nav_col1, nav_col2, nav_spacer = st.columns([1, 1, 2])
+        
+        with nav_col1:
+            if st.button("📦 Secondary Packaging →", use_container_width=True, type="primary", key="to_secondary"):
+                st.session_state.analyzer_section = 'secondary'
+                st.rerun()
+        
+        with nav_col2:
+            if st.button("📊 Volume Analysis →", use_container_width=True, type="primary", key="to_analysis_from_primary"):
+                if 'primary_volume_mm3' in st.session_state and 'box_volume_mm3' in st.session_state:
+                    st.session_state.analyzer_section = 'analysis'
+                    st.rerun()
+                else:
+                    st.warning("⚠️ Please calculate box volume first")
+    
+    # SECTION 2: SECONDARY PACKAGING
+    elif st.session_state.analyzer_section == 'secondary':
+        st.markdown("## 📦 Secondary Packaging Calculator")
+        
+        st.markdown("### Box Dimensions Calculator")
+        
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            st.markdown("#### Input Box Dimensions")
+            dimension_unit = st.session_state.pref_dimension_unit
+            st.info(f"ℹ️ All dimensions in **{dimension_unit}**")
+            
+            box_length = st.number_input(
+                f"Length ({dimension_unit})",
+                min_value=0.0,
+                step=0.1,
+                format="%.2f",
+                key="box_length"
+            )
+            
+            box_width = st.number_input(
+                f"Width ({dimension_unit})",
+                min_value=0.0,
+                step=0.1,
+                format="%.2f",
+                key="box_width"
+            )
+            
+            box_height = st.number_input(
+                f"Height ({dimension_unit})",
+                min_value=0.0,
+                step=0.1,
+                format="%.2f",
+                key="box_height"
+            )
+            
+            if st.button("🧮 Calculate", use_container_width=True, type="primary"):
+                if box_length > 0 and box_width > 0 and box_height > 0:
+                    dim_to_mm = {
+                        'mm': 1,
+                        'cm': 10,
+                        'inches': 25.4,
+                        'feet': 304.8
+                    }
+                    
+                    length_mm = box_length * dim_to_mm[dimension_unit]
+                    width_mm = box_width * dim_to_mm[dimension_unit]
+                    height_mm = box_height * dim_to_mm[dimension_unit]
+                    
+                    box_volume_mm3 = length_mm * width_mm * height_mm
+                    st.session_state.box_volume_mm3 = box_volume_mm3
+                    
+                    st.success("✅ Box volume calculated!")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Please enter all dimensions")
+        
+        with col2:
+            st.markdown("#### Live Preview")
+            # Dynamic 2D box illustration
+            box_svg = create_2d_box_illustration(
+                st.session_state.get('box_length', 0),
+                st.session_state.get('box_width', 0),
+                st.session_state.get('box_height', 0),
+                dimension_unit
+            )
+            st.markdown(box_svg, unsafe_allow_html=True)
+        
+        # Box Volume Results (below the preview)
+        if 'box_volume_mm3' in st.session_state:
+            st.markdown("---")
+            st.markdown("### Box Volume Results")
+            
+            result_unit = st.session_state.pref_volume_unit
             mm3_to_result = {
-                "cubic mm": 1,
-                "cubic cm": 0.001,
-                "cubic inches": 0.000061023744
+                'cubic mm': 1,
+                'cubic cm': 0.001,
+                'cubic inches': 0.000061023744,
+                'cubic feet': 0.000000035315
             }
             
-            box_volume_result = box_volume_mm3 * mm3_to_result[result_unit_box]
+            box_result = st.session_state.box_volume_mm3 * mm3_to_result[result_unit]
             
-            # Store box volume in session state
-            st.session_state.box_volume_mm3 = box_volume_mm3
-            
-            # Display box volume
             st.markdown(f"""
             <div class="metric-card">
-                <div style="color: #ffa726; font-weight: bold; font-size: 1.1rem;">Box Volume</div>
-                <div class="result-value" style="color: #ffa726;">{box_volume_result:,.2f}</div>
-                <div class="result-unit">{result_unit_box}</div>
+                <div style="color: #10b981; font-weight: bold; font-size: 1.2rem;">Box Volume</div>
+                <div class="result-value">{box_result:,.2f}</div>
+                <div class="result-unit">{result_unit}</div>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("---")
-            st.markdown("### Remaining Volume Analysis")
+            st.info(f"ℹ️ Results in **{result_unit}** (set in Unit Preferences)")
             
-            # Calculate remaining volume if primary volume exists
-            if 'primary_volume_mm3' in st.session_state and st.session_state.primary_volume_mm3 > 0:
-                remaining_volume_mm3 = box_volume_mm3 - st.session_state.primary_volume_mm3
+            if 'primary_volume_mm3' in st.session_state:
+                st.markdown("---")
+                st.markdown("#### Remaining Volume Analysis")
                 
-                remaining_unit = st.selectbox(
-                    "Remaining Volume Unit",
-                    ["cubic cm", "cubic mm", "cubic inches", "cubic feet"],
-                    index=0,
-                    key="remaining_unit"
+                product_volume_to_use = st.session_state.get('total_product_volume_mm3', 
+                                                              st.session_state['primary_volume_mm3'])
+                
+                box_volume_mm3 = st.session_state['box_volume_mm3']
+                remaining_volume_mm3 = box_volume_mm3 - product_volume_to_use
+                
+                remaining_unit = st.session_state.pref_volume_unit
+                
+                box_volume_result = box_volume_mm3 * mm3_to_result[remaining_unit]
+                product_volume_result = product_volume_to_use * mm3_to_result[remaining_unit]
+                remaining_volume_result = remaining_volume_mm3 * mm3_to_result[remaining_unit]
+                
+                quantity = st.session_state.get('product_quantity', 1)
+                product_label = f"Product Volume (×{quantity})" if quantity > 1 else "Product Volume"
+                
+                vol_col1, vol_col2, vol_col3 = st.columns(3)
+                
+                with vol_col1:
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div style="color: #10b981; font-weight: bold;">Box Volume</div>
+                        <div style="font-size: 1.8rem; font-weight: bold; color: #10b981; margin: 10px 0;">
+                            {box_volume_result:,.2f}
+                        </div>
+                        <div class="result-unit">{remaining_unit}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with vol_col2:
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div style="color: #3b82f6; font-weight: bold;">{product_label}</div>
+                        <div style="font-size: 1.8rem; font-weight: bold; color: #3b82f6; margin: 10px 0;">
+                            {product_volume_result:,.2f}
+                        </div>
+                        <div class="result-unit">{remaining_unit}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with vol_col3:
+                    remaining_color = "#10b981" if remaining_volume_result >= 0 else "#ef4444"
+                    st.markdown(f"""
+                    <div class="metric-card" style="border-color: {remaining_color};">
+                        <div style="color: {remaining_color}; font-weight: bold;">Remaining Volume</div>
+                        <div style="font-size: 1.8rem; font-weight: bold; color: {remaining_color}; margin: 10px 0;">
+                            {remaining_volume_result:,.2f}
+                        </div>
+                        <div class="result-unit">{remaining_unit}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        nav_col1, nav_col2, nav_spacer = st.columns([1, 1, 2])
+        
+        with nav_col1:
+            if st.button("← Back to Primary", use_container_width=True, key="back_to_primary"):
+                st.session_state.analyzer_section = 'primary'
+                st.rerun()
+        
+        with nav_col2:
+            if st.button("📊 Volume Analysis →", use_container_width=True, type="primary", key="to_analysis_from_secondary"):
+                if 'box_volume_mm3' in st.session_state:
+                    st.session_state.analyzer_section = 'analysis'
+                    st.rerun()
+                else:
+                    st.warning("⚠️ Please calculate box volume first")
+    
+    # SECTION 3: VOLUME ANALYSIS (FULL SCREEN VISUALIZATIONS!)
+    elif st.session_state.analyzer_section == 'analysis':
+        st.markdown("## 📊 Volume Efficiency Analysis")
+        
+        if 'primary_volume_mm3' not in st.session_state or 'box_volume_mm3' not in st.session_state:
+            st.warning("⚠️ Please calculate primary volume and box volume first")
+            
+            if st.button("← Back to Primary", use_container_width=True):
+                st.session_state.analyzer_section = 'primary'
+                st.rerun()
+        else:
+            product_volume_to_use = st.session_state.get('total_product_volume_mm3', 
+                                                          st.session_state['primary_volume_mm3'])
+            box_volume_mm3 = st.session_state['box_volume_mm3']
+            volume_efficiency_percentage = (product_volume_to_use / box_volume_mm3 * 100) if box_volume_mm3 > 0 else 0
+            
+            # ROW 1: Gauge and Donut (LARGE, Side by Side)
+            viz_col1, viz_col2 = st.columns(2)
+            
+            with viz_col1:
+                gauge_fig = create_efficiency_gauge(volume_efficiency_percentage)
+                st.plotly_chart(gauge_fig, use_container_width=True, key="efficiency_gauge_fullscreen")
+            
+            with viz_col2:
+                donut_fig = create_donut_chart(volume_efficiency_percentage)
+                st.plotly_chart(donut_fig, use_container_width=True, key="space_donut_fullscreen")
+            
+            # ROW 2: Volume Comparison Bar (FULL WIDTH)
+            st.markdown("### 📦 Volume Breakdown")
+            
+            remaining_unit = st.session_state.pref_volume_unit
+            mm3_to_remaining = {
+                'cubic mm': 1,
+                'cubic cm': 0.001,
+                'cubic inches': 0.000061023744,
+                'cubic feet': 0.000000035315
+            }
+            
+            comparison_fig = create_volume_comparison_chart(
+                box_volume_mm3 * mm3_to_remaining[remaining_unit],
+                product_volume_to_use * mm3_to_remaining[remaining_unit],
+                remaining_unit
+            )
+            st.plotly_chart(comparison_fig, use_container_width=True, key="volume_comparison_fullscreen")
+            
+            # ROW 3: 3D Box Preview (FULL WIDTH, LARGE)
+            if all(k in st.session_state for k in ['box_length', 'box_width', 'box_height']):
+                st.markdown("### 🎁 3D Box Preview")
+                
+                box_3d_fig = create_3d_box_visualization(
+                    st.session_state['box_length'],
+                    st.session_state['box_width'],
+                    st.session_state['box_height'],
+                    volume_efficiency_percentage,
+                    st.session_state.pref_dimension_unit
                 )
-                
-                # Conversion factors from mm³
-                mm3_to_remaining = {
-                    "cubic mm": 1,
-                    "cubic cm": 0.001,
-                    "cubic inches": 0.000061023744,
-                    "cubic feet": 0.000000035315
-                }
-                
-                remaining_volume_result = remaining_volume_mm3 * mm3_to_remaining[remaining_unit]
-                
-                # Calculate Volume Efficiency Percentage
-                if box_volume_mm3 > 0:
-                    volume_efficiency_percentage = (st.session_state.primary_volume_mm3 / box_volume_mm3) * 100
-                    remaining_space_percentage = (remaining_volume_mm3 / box_volume_mm3) * 100
-                else:
-                    volume_efficiency_percentage = 0
-                    remaining_space_percentage = 0
-                
-                # Display remaining volume
-                col_a, col_b = st.columns(2)
-                
-                with col_a:
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <div style="color: #66b2ff; font-weight: bold; font-size: 1rem;">Box Volume</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: #66b2ff; margin: 10px 0;">
-                            {box_volume_mm3 * mm3_to_remaining[remaining_unit]:,.2f}
-                        </div>
-                        <div class="result-unit">{remaining_unit}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col_b:
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <div style="color: #ab47bc; font-weight: bold; font-size: 1rem;">Product Volume</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: #ab47bc; margin: 10px 0;">
-                            {st.session_state.primary_volume_mm3 * mm3_to_remaining[remaining_unit]:,.2f}
-                        </div>
-                        <div class="result-unit">{remaining_unit}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                # Remaining volume
-                color = "#4caf50" if remaining_volume_result > 0 else "#f44336"
-                st.markdown(f"""
-                <div class="metric-card" style="border-color: {color};">
-                    <div style="color: {color}; font-weight: bold; font-size: 1.2rem;">Remaining Volume</div>
-                    <div class="result-value" style="color: {color};">{remaining_volume_result:,.2f}</div>
-                    <div class="result-unit">{remaining_unit}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Volume Efficiency Percentage
-                st.markdown("---")
-                st.markdown("### 📊 Volume Efficiency Analysis")
-                
-                # Determine color and status based on efficiency
-                if volume_efficiency_percentage >= 80:
-                    gauge_color = "#10b981"  # Green - Excellent
-                    eff_status = "Excellent"
-                    badge_class = "badge-excellent"
-                elif volume_efficiency_percentage >= 60:
-                    gauge_color = "#8bc34a"  # Light green - Good
-                    eff_status = "Good"
-                    badge_class = "badge-good"
-                elif volume_efficiency_percentage >= 40:
-                    gauge_color = "#ffc107"  # Yellow - Moderate
-                    eff_status = "Moderate"
-                    badge_class = "badge-moderate"
-                else:
-                    gauge_color = "#ff9800"  # Orange - Low
-                    eff_status = "Low"
-                    badge_class = "badge-low"
-                
-                col_gauge, col_donut = st.columns(2)
-                
-                with col_gauge:
-                    # Gauge Chart for Volume Efficiency
-                    fig_gauge = go.Figure(go.Indicator(
-                        mode = "gauge+number+delta",
-                        value = volume_efficiency_percentage,
-                        domain = {'x': [0, 1], 'y': [0, 1]},
-                        title = {'text': "<b>Volume Efficiency</b>", 'font': {'size': 24, 'color': '#90caf9'}},
-                        number = {'suffix': "%", 'font': {'size': 40, 'color': gauge_color}},
-                        delta = {'reference': 75, 'increasing': {'color': "#10b981"}},
-                        gauge = {
-                            'axis': {'range': [None, 100], 'tickwidth': 2, 'tickcolor': "#90caf9"},
-                            'bar': {'color': gauge_color, 'thickness': 0.75},
-                            'bgcolor': "rgba(255,255,255,0.1)",
-                            'borderwidth': 2,
-                            'bordercolor': "#334155",
-                            'steps': [
-                                {'range': [0, 40], 'color': 'rgba(255, 152, 0, 0.2)'},
-                                {'range': [40, 60], 'color': 'rgba(255, 193, 7, 0.2)'},
-                                {'range': [60, 80], 'color': 'rgba(139, 195, 74, 0.2)'},
-                                {'range': [80, 100], 'color': 'rgba(16, 185, 129, 0.2)'}
-                            ],
-                            'threshold': {
-                                'line': {'color': "#2563eb", 'width': 4},
-                                'thickness': 0.75,
-                                'value': 75
-                            }
-                        }
-                    ))
-                    
-                    fig_gauge.update_layout(
-                        paper_bgcolor='rgba(0,0,0,0)',
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        font={'color': "#90caf9", 'family': "Arial"},
-                        height=350,
-                        margin=dict(l=20, r=20, t=80, b=20)
-                    )
-                    
-                    st.plotly_chart(fig_gauge, use_container_width=True)
-                    
-                    # Status badge
-                    st.markdown(f"""
-                    <div style="text-align: center; margin-top: -20px;">
-                        <span class="efficiency-badge {badge_class}">{eff_status} Space Utilization</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col_donut:
-                    # Donut Chart for Space Distribution
-                    fig_donut = go.Figure(data=[go.Pie(
-                        labels=['Product Volume', 'Remaining Space'],
-                        values=[volume_efficiency_percentage, remaining_space_percentage],
-                        hole=.6,
-                        marker=dict(
-                            colors=['#2563eb', '#10b981' if remaining_space_percentage > 0 else '#ef4444'],
-                            line=dict(color='#1e293b', width=3)
-                        ),
-                        textinfo='label+percent',
-                        textfont=dict(size=14, color='white'),
-                        hovertemplate='<b>%{label}</b><br>%{value:.1f}%<br><extra></extra>'
-                    )])
-                    
-                    fig_donut.update_layout(
-                        title={
-                            'text': '<b>Space Distribution</b>',
-                            'y':0.95,
-                            'x':0.5,
-                            'xanchor': 'center',
-                            'yanchor': 'top',
-                            'font': {'size': 24, 'color': '#90caf9'}
-                        },
-                        paper_bgcolor='rgba(0,0,0,0)',
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        font={'color': "#90caf9"},
-                        showlegend=True,
-                        legend=dict(
-                            orientation="h",
-                            yanchor="bottom",
-                            y=-0.1,
-                            xanchor="center",
-                            x=0.5,
-                            font=dict(size=12)
-                        ),
-                        height=350,
-                        margin=dict(l=20, r=20, t=80, b=60),
-                        annotations=[dict(
-                            text=f'<b>{volume_efficiency_percentage:.1f}%</b><br>Used',
-                            x=0.5, y=0.5,
-                            font=dict(size=20, color=gauge_color),
-                            showarrow=False
-                        )]
-                    )
-                    
-                    st.plotly_chart(fig_donut, use_container_width=True)
-                
-                # Detailed metrics in cards
-                st.markdown("---")
-                metric_col1, metric_col2, metric_col3 = st.columns(3)
-                
-                with metric_col1:
-                    st.metric(
-                        label="📦 Box Volume",
-                        value=f"{box_volume_mm3 * mm3_to_remaining[remaining_unit]:,.2f}",
-                        delta=remaining_unit
-                    )
-                
-                with metric_col2:
-                    st.metric(
-                        label="📊 Product Volume",
-                        value=f"{st.session_state.primary_volume_mm3 * mm3_to_remaining[remaining_unit]:,.2f}",
-                        delta=f"{volume_efficiency_percentage:.1f}% filled"
-                    )
-                
-                with metric_col3:
-                    st.metric(
-                        label="✨ Remaining Space",
-                        value=f"{remaining_volume_result:,.2f}",
-                        delta=f"{remaining_space_percentage:.1f}% free",
-                        delta_color="normal" if remaining_volume_result > 0 else "inverse"
-                    )
-                
-                # Status messages
-                if remaining_volume_result < 0:
-                    st.error("⚠️ Warning: Product volume exceeds box capacity!")
-                else:
-                    st.success(f"✅ Box has sufficient space with {remaining_volume_result:,.2f} {remaining_unit} remaining")
+                st.plotly_chart(box_3d_fig, use_container_width=True, key="box_3d_fullscreen")
+            
+            remaining_volume_result = (box_volume_mm3 - product_volume_to_use) * mm3_to_remaining[remaining_unit]
+            
+            if remaining_volume_result < 0:
+                st.error("⚠️ Warning: Product volume exceeds box capacity!")
             else:
-                st.info("💡 Calculate the Primary Product Volume first to see remaining space analysis")
+                st.success(f"✅ Box has sufficient space with {remaining_volume_result:,.2f} {remaining_unit} remaining")
+            
+            st.markdown("---")
+            if st.button("← Back to Secondary Packaging", use_container_width=True, key="back_to_secondary"):
+                st.session_state.analyzer_section = 'secondary'
+                st.rerun()
 
+# END OF SECTION NAVIGATION
 # TAB 2: Project Results
 with tab2:
     st.markdown("## Project Results")
@@ -1080,17 +1804,24 @@ with tab2:
             st.markdown("**Select**")
             # Create checkbox for each project
             for idx in range(len(st.session_state.projects)):
-                # Use checkbox that can be toggled on/off
-                is_selected = idx in st.session_state.selected_project_indices
+                # Check if this index is in selection
+                is_checked = idx in st.session_state.selected_project_indices
                 
-                if st.checkbox("", value=is_selected, key=f"select_project_{idx}", label_visibility="collapsed"):
-                    # Add to selection if not already there
-                    if idx not in st.session_state.selected_project_indices:
-                        st.session_state.selected_project_indices.append(idx)
-                else:
-                    # Remove from selection if it's there
-                    if idx in st.session_state.selected_project_indices:
-                        st.session_state.selected_project_indices.remove(idx)
+                # Use unique key for each checkbox
+                checkbox_key = f"select_project_{idx}"
+                
+                # Checkbox without value parameter - let Streamlit handle state
+                checked = st.checkbox(
+                    "",
+                    key=checkbox_key,
+                    label_visibility="collapsed"
+                )
+                
+                # Update selection list based on checkbox state
+                if checked and idx not in st.session_state.selected_project_indices:
+                    st.session_state.selected_project_indices.append(idx)
+                elif not checked and idx in st.session_state.selected_project_indices:
+                    st.session_state.selected_project_indices.remove(idx)
         
         with col_table:
             # Display project info as table with optimized column widths
@@ -1112,7 +1843,7 @@ with tab2:
                 column_config={
                     "Project #": st.column_config.NumberColumn(
                         "Project #",
-                        width="small",  # Optimized to fit project number
+                        width=80,  # Fixed pixel width to fit project number
                     ),
                     "Project Name": st.column_config.TextColumn(
                         "Project Name",
@@ -1400,8 +2131,16 @@ with tab2:
         
         # Display all loaded projects in overview
         if st.session_state.loaded_projects_overview:
+            st.info(f"📊 Showing {len(st.session_state.loaded_projects_overview)} project(s) in overview")
+            
+            # Show quick summary list
+            st.markdown("**Projects in Overview:**")
+            project_list = ", ".join([f"**{p['project_name']}** (#{p['project_number']})" for p in st.session_state.loaded_projects_overview])
+            st.markdown(project_list)
+            st.markdown("---")
+            
             for idx, project in enumerate(st.session_state.loaded_projects_overview):
-                with st.expander(f"📋 Project {project['project_number']} - {project['project_name']}", expanded=True):
+                with st.expander(f"📋 Project {project['project_number']} - {project['project_name']}", expanded=False):
                     col1, col2 = st.columns(2)
                     
                     with col1:
@@ -1472,160 +2211,6 @@ with tab2:
                 }
                 
                 conversion_factor = mm3_to_unit[comparison_unit]
-                
-                # Prepare data for comparison chart
-                project_names = []
-                box_volumes = []
-                product_volumes = []
-                remaining_volumes = []
-                efficiency_percentages = []
-                
-                for project in projects_with_boxes:
-                    project_names.append(project['project_name'])
-                    box_volumes.append(project['box_volume_mm3'] * conversion_factor)
-                    product_volumes.append(project['primary_volume_mm3'] * conversion_factor)
-                    remaining_volumes.append((project['box_volume_mm3'] - project['primary_volume_mm3']) * conversion_factor)
-                    efficiency_percentages.append((project['primary_volume_mm3'] / project['box_volume_mm3']) * 100 if project['box_volume_mm3'] > 0 else 0)
-                
-                # Interactive Bar Chart Comparison
-                st.markdown("### 📈 Visual Comparison")
-                
-                fig_comparison = go.Figure()
-                
-                # Add bars for box volume
-                fig_comparison.add_trace(go.Bar(
-                    name='Box Volume',
-                    x=project_names,
-                    y=box_volumes,
-                    marker=dict(
-                        color='#2563eb',
-                        line=dict(color='#1e40af', width=2)
-                    ),
-                    hovertemplate='<b>%{x}</b><br>Box: %{y:,.2f} ' + comparison_unit + '<extra></extra>'
-                ))
-                
-                # Add bars for product volume
-                fig_comparison.add_trace(go.Bar(
-                    name='Product Volume',
-                    x=project_names,
-                    y=product_volumes,
-                    marker=dict(
-                        color='#f59e0b',
-                        line=dict(color='#d97706', width=2)
-                    ),
-                    hovertemplate='<b>%{x}</b><br>Product: %{y:,.2f} ' + comparison_unit + '<extra></extra>'
-                ))
-                
-                # Add bars for remaining volume
-                fig_comparison.add_trace(go.Bar(
-                    name='Remaining Space',
-                    x=project_names,
-                    y=remaining_volumes,
-                    marker=dict(
-                        color='#10b981',
-                        line=dict(color='#059669', width=2)
-                    ),
-                    hovertemplate='<b>%{x}</b><br>Remaining: %{y:,.2f} ' + comparison_unit + '<extra></extra>'
-                ))
-                
-                fig_comparison.update_layout(
-                    title=dict(
-                        text=f'<b>Volume Comparison ({comparison_unit})</b>',
-                        font=dict(size=20, color='#90caf9')
-                    ),
-                    xaxis=dict(
-                        title='Projects',
-                        tickangle=-45,
-                        color='#cbd5e1'
-                    ),
-                    yaxis=dict(
-                        title=f'Volume ({comparison_unit})',
-                        color='#cbd5e1'
-                    ),
-                    barmode='group',
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(30, 41, 59, 0.5)',
-                    font=dict(color='#cbd5e1'),
-                    hovermode='x unified',
-                    legend=dict(
-                        orientation="h",
-                        yanchor="bottom",
-                        y=1.02,
-                        xanchor="right",
-                        x=1
-                    ),
-                    height=400,
-                    margin=dict(l=60, r=40, t=80, b=100)
-                )
-                
-                st.plotly_chart(fig_comparison, use_container_width=True)
-                
-                # Efficiency Comparison Chart
-                st.markdown("### 🎯 Efficiency Comparison")
-                
-                fig_efficiency = go.Figure()
-                
-                # Color code based on efficiency
-                colors = []
-                for eff in efficiency_percentages:
-                    if eff >= 80:
-                        colors.append('#10b981')
-                    elif eff >= 60:
-                        colors.append('#8bc34a')
-                    elif eff >= 40:
-                        colors.append('#ffc107')
-                    else:
-                        colors.append('#ff9800')
-                
-                fig_efficiency.add_trace(go.Bar(
-                    x=project_names,
-                    y=efficiency_percentages,
-                    marker=dict(
-                        color=colors,
-                        line=dict(color='#1e293b', width=2)
-                    ),
-                    text=[f'{eff:.1f}%' for eff in efficiency_percentages],
-                    textposition='outside',
-                    hovertemplate='<b>%{x}</b><br>Efficiency: %{y:.1f}%<extra></extra>'
-                ))
-                
-                # Add target line at 75%
-                fig_efficiency.add_hline(
-                    y=75, 
-                    line_dash="dash", 
-                    line_color="#2563eb",
-                    annotation_text="Target: 75%",
-                    annotation_position="right"
-                )
-                
-                fig_efficiency.update_layout(
-                    title=dict(
-                        text='<b>Volume Efficiency by Project</b>',
-                        font=dict(size=20, color='#90caf9')
-                    ),
-                    xaxis=dict(
-                        title='Projects',
-                        tickangle=-45,
-                        color='#cbd5e1'
-                    ),
-                    yaxis=dict(
-                        title='Efficiency (%)',
-                        range=[0, 105],
-                        color='#cbd5e1'
-                    ),
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(30, 41, 59, 0.5)',
-                    font=dict(color='#cbd5e1'),
-                    showlegend=False,
-                    height=400,
-                    margin=dict(l=60, r=40, t=80, b=100)
-                )
-                
-                st.plotly_chart(fig_efficiency, use_container_width=True)
-                
-                # Detailed project cards below
-                st.markdown("---")
-                st.markdown("### 📋 Detailed Project Metrics")
                 
                 for project in projects_with_boxes:
                     box_volume_mm3 = project['box_volume_mm3']
